@@ -1,0 +1,4 @@
+---
+k0s_version: v0.10.0
+
+k0s_bin_url: "https://github.com/k0sproject/k0s/releases/download/{{ k0s_version }}/k0s-v0.10.0-amd64"

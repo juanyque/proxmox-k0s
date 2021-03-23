@@ -1,0 +1,33 @@
+---
+
+
+#TODO: 2021022801: In future, don't make diferences between server and workers... try to create all as servers with workers enabled. Look at: https://www.mirantis.com/blog/how-to-set-up-k0s-kubernetes-a-quick-and-dirty-guide/
+- name: Create k0s_controller_token file
+  copy:
+    dest: /root/k0s_controller_token
+    content: "{{ hostvars[groups['servers'][0]]['k0s_controller_token'] }}"
+  become: true
+
+#- name: Arrancamos nodo como worker k0s
+#  shell: "nohup k0s worker {{ hostvars[groups['servers'][0]]['k0s_worker_token'] }} >/dev/null 2>&1 &"
+#  become: true
+
+- name: Create k0s_worker_token file
+  copy:
+    dest: /root/k0s_worker_token
+    content: "{{ hostvars[groups['servers'][0]]['k0s_worker_token'] }}"
+  become: true
+
+- name: Install k0s worker service
+  register: k0s_worker_installed
+  command: k0s install worker --token-file /root/k0s_worker_token
+  changed_when: k0s_worker_installed | length > 0
+  become: true
+
+- name: Start and enable k0s-worker
+  systemd:
+    name: k0sworker
+    state: started
+    enabled: true
+    daemon_reload: true
+  become: true

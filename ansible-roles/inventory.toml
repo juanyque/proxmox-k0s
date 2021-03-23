@@ -1,0 +1,14 @@
+[all]
+k0s-node-0 ansible_host=192.168.0.201
+k0s-node-1 ansible_host=192.168.0.202
+k0s-node-2 ansible_host=192.168.0.203
+k0s-node-3 ansible_host=192.168.0.204
+
+[servers]
+k0s-node-0
+
+[workers]
+k0s-node-1
+k0s-node-2
+k0s-node-3
+

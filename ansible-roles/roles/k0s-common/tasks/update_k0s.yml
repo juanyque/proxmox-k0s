@@ -1,0 +1,4 @@
+---
+- name: Install K0s or update if needed
+  shell: curl -sSLf k0s.sh | sh
+  become: true

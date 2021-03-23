@@ -1,0 +1,71 @@
+---
+- name: Generate k0s default config
+  shell: k0s default-config > /root/k0s.yaml
+  become: true
+
+- name: Add public domain name to cluster configuration file
+  ansible.builtin.lineinfile:
+    path: /root/k0s.yaml
+    state: present
+    regexp: '{{ k0s_public_domain }}'
+    insertafter: 'sans:'
+    line: "    - {{ k0s_public_domain }}"
+  become: true
+
+#- name: Start k0s cluster
+#  shell: nohup k0s server --enable-worker -c /root/k0s.yaml >/dev/null 2>&1 &
+#  become: true
+
+- name: Create k0s server service
+  register: k0s_server_installed
+#TODO: 2021022801: In future, don't make diferences between server and workers... try to create all as servers with workers enabled. Look at: https://www.mirantis.com/blog/how-to-set-up-k0s-kubernetes-a-quick-and-dirty-guide/
+#  command: k0s install server -c /root/k0s.yaml --enable-worker
+  command: k0s install server -c /root/k0s.yaml
+  changed_when: k0s_server_installed | length > 0
+  become: true
+
+- name: Start and enable k0s-server
+  systemd:
+    name: k0sserver
+    state: started
+    enabled: true
+    daemon_reload: true
+  become: true
+
+
+- name: Create k0s controller token
+  command: k0s token create --role=controller
+  register: k0s_controller_token_creator
+  retries: 30
+  delay: 5
+  until: k0s_controller_token_creator.rc == 0
+  changed_when: k0s_controller_token_creator | length > 0
+  become: true
+
+- name: Save k0s controller token
+  set_fact:
+    k0s_controller_token: "{{ k0s_controller_token_creator.stdout }}"
+
+- name: Print controller token
+  debug:
+    msg: "k0s controller token: {{ hostvars[groups['servers'][0]]['k0s_controller_token'] }}"
+
+
+
+- name: Create k0s worker token
+  command: k0s token create --role=worker
+  register: k0s_worker_token_creator
+  retries: 30
+  delay: 5
+  until: k0s_worker_token_creator.rc == 0
+  changed_when: k0s_worker_token_creator | length > 0
+  become: true
+
+- name: Save k0s worker token
+  set_fact:
+    k0s_worker_token: "{{ k0s_worker_token_creator.stdout }}"
+
+- name: Print worker token
+  debug:
+    msg: "k0s worker token: {{ hostvars[groups['servers'][0]]['k0s_worker_token'] }}"
+

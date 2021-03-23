@@ -1,0 +1,8 @@
+---
+
+- name: Install k0s binaries
+  get_url:
+    url: "{{ k0s_bin_url }}"
+    dest: "/usr/local/bin/k0s"
+    mode: 0755
+  become: true

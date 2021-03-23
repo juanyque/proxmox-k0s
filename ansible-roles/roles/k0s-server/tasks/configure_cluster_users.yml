@@ -1,0 +1,13 @@
+---
+- name: Install "kubectl" with option --classic
+  community.general.snap:
+    name: kubectl
+    classic: yes
+  become: true
+
+- name: Generate kubeconfig file and create cluster role
+  shell: |
+    mkdir -p ~/.kube
+    k0s kubeconfig create --groups "system:masters" {{ k0s_user }} > ~/.kube/config
+    kubectl create clusterrolebinding {{ k0s_user }}-admin-binding --clusterrole=admin --user={{ k0s_user }}
+  become: true
